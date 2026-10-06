@@ -1,15 +1,70 @@
-<<h1> tasks: </h1>
-<form method="POST" action="/">
-    {% csrf_token %}
-    {{taskform}}
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Dashboard</h1>
+    <p>Welcome, <strong>{{ request.user.username }}</strong> | <a href="{% url 'logout' %}">Logout</a></p>
+</div>
 
-    <input class="btn" type="submit" name="create task">
+<div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9;">
+    <h3>Task Statistics:</h3>
+    <p>Total Tasks: {{ total_tasks }}</p>
+    <p>Pending: {{ pending_tasks }}</p>
+    <p>In Progress: {{ in_progress_tasks }}</p>
+    <p>Completed: {{ completed_tasks }}</p>
+    <p>High Priority: {{ high_priority_tasks }}</p>
+</div>
+
+<hr>
+
+<h3>Create New Task:</h3>
+<form method="POST" action="{% url 'index' %}">
+    {% csrf_token %}
+    {{ taskform.as_p }}
+    <input class="btn" type="submit" value="Create Task">
 </form>
 
+<hr>
+
+<h3>Search and Filter:</h3>
+<form method="GET" action="{% url 'index' %}">
+    <input type="text" name="search" placeholder="Search..." value="{{ search_query }}">
+    
+    <select name="status">
+        <option value="">All Statuses</option>
+        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+    </select>
+
+    <select name="priority">
+        <option value="">All Priorities</option>
+        <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+        <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+        <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+    </select>
+
+    <select name="sort">
+        <option value="">Sort By...</option>
+        <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>Due Date</option>
+        <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>Priority</option>
+        <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Created Date</option>
+    </select>
+
+    <input type="submit" value="Apply">
+    <a href="{% url 'index' %}">Reset Filters</a>
+</form>
+
+<hr>
+
+<h3>Tasks List:</h3>
 {% for i in tasks %}
-  <a href="{% url 'update' i.id %}"> update </a>
-  <a href="{% url 'delete' i.id %}"> delete </a>
 <p>
-    {{i}}
+    <strong>{{ i.title }}</strong> | 
+    Status: {{ i.get_status_display }} | 
+    Priority: {{ i.get_priority_display }} | 
+    Due Date: {{ i.due_date|default:"N/A" }}
+    
+    <a href="{% url 'update' i.id %}">Update</a>
+    <a href="{% url 'delete' i.id %}">Delete</a>
 </p>
+{% empty %}
+<p>No tasks found.</p>
 {% endfor %}
